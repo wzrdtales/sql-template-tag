@@ -45,7 +45,8 @@ export class Sql {
     // positioned between two strings, e.g. `index + 1`.
     let index = 1;
     let position = 0;
-    while (index < rawStrings.length) {
+    const rawLen = rawStrings.length;
+    while (index < rawLen) {
       const child = rawValues[index - 1];
       const rawString = rawStrings[index++];
 
@@ -55,7 +56,8 @@ export class Sql {
         this.strings[position] += child.strings[0];
 
         let childIndex = 0;
-        while (childIndex < child.values.length) {
+        const childLen = child.values.length;
+        while (childIndex < childLen) {
           this.values[position++] = child.values[childIndex++];
           this.strings[position] = child.strings[childIndex];
         }
