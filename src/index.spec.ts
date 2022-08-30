@@ -1,5 +1,6 @@
-import { inspect } from "util";
-import sql, { empty, join, Sql } from "./index";
+import {inspect} from "util";
+
+import sql, {empty, join, Sql} from "./index";
 
 describe("sql template tag", () => {
   it("should generate sql", () => {
@@ -16,32 +17,30 @@ describe("sql template tag", () => {
 
     expect(query.sql).toEqual("SELECT * FROM books WHERE author = ?");
     expect(query.text).toEqual("SELECT * FROM books WHERE author = $1");
-    expect(query.values).toEqual([name]);
+    expect(query.values).toEqual([ name ]);
   });
 
   it("should build sql with child sql statements", () => {
     const subquery = sql`SELECT id FROM authors WHERE name = ${"Blake"}`;
     const query = sql`SELECT * FROM books WHERE author_id IN (${subquery})`;
 
-    expect(query.text).toEqual(
-      "SELECT * FROM books WHERE author_id IN (SELECT id FROM authors WHERE name = $1)"
-    );
-    expect(query.values).toEqual(["Blake"]);
+    expect(query.text)
+        .toEqual(
+            "SELECT * FROM books WHERE author_id IN (SELECT id FROM authors WHERE name = $1)");
+    expect(query.values).toEqual([ "Blake" ]);
   });
 
   it("should not cache values for mysql compatibility", () => {
-    const ids = [1, 2, 3];
-    const query = sql`SELECT * FROM books WHERE id IN (${join(
-      ids
-    )}) OR author_id IN (${join(ids)})`;
+    const ids = [ 1, 2, 3 ];
+    const query = sql`SELECT * FROM books WHERE id IN (${
+        join(ids)}) OR author_id IN (${join(ids)})`;
 
     expect(query.sql).toEqual(
-      "SELECT * FROM books WHERE id IN (?,?,?) OR author_id IN (?,?,?)"
-    );
-    expect(query.text).toEqual(
-      "SELECT * FROM books WHERE id IN ($1,$2,$3) OR author_id IN ($4,$5,$6)"
-    );
-    expect(query.values).toEqual([1, 2, 3, 1, 2, 3]);
+        "SELECT * FROM books WHERE id IN (?,?,?) OR author_id IN (?,?,?)");
+    expect(query.text)
+        .toEqual(
+            "SELECT * FROM books WHERE id IN ($1,$2,$3) OR author_id IN ($4,$5,$6)");
+    expect(query.values).toEqual([ 1, 2, 3, 1, 2, 3 ]);
   });
 
   it('should provide "empty" helper', () => {
@@ -57,9 +56,8 @@ describe("sql template tag", () => {
   });
 
   it("should throw when values is less than expected", () => {
-    expect(() => new Sql(["", ""], [])).toThrowError(
-      "Expected 2 strings to have 1 values"
-    );
+    expect(() => new Sql([ "", "" ], []))
+        .toThrowError("Expected 2 strings to have 1 values");
   });
 
   it("should inspect sql instance", () => {
@@ -70,17 +68,18 @@ describe("sql template tag", () => {
     const query = sql`SELECT COUNT(1)`;
     const keys = [];
 
-    for (const key in query) keys.push(key);
+    for (const key in query)
+      keys.push(key);
 
-    expect(keys).toEqual(["values", "strings", "text", "sql"]);
+    expect(keys).toEqual([ "values", "strings", "text", "sql" ]);
   });
 
   describe("join", () => {
     it("should join list", () => {
-      const query = join([1, 2, 3]);
+      const query = join([ 1, 2, 3 ]);
 
       expect(query.text).toEqual("$1,$2,$3");
-      expect(query.values).toEqual([1, 2, 3]);
+      expect(query.values).toEqual([ 1, 2, 3 ]);
     });
 
     it("should error joining an empty list", () => {
