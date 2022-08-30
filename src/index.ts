@@ -1,7 +1,7 @@
-import { inspect } from "util";
+import {inspect} from "util";
 
-export type Value = string | number | boolean | object | null | undefined;
-export type RawValue = Value | Sql;
+export type Value = string|number|boolean|object|null|undefined;
+export type RawValue = Value|Sql;
 
 /**
  * A SQL instance can be nested within each other to build SQL strings.
@@ -10,20 +10,15 @@ export class Sql {
   values: Value[];
   strings: string[];
 
-  constructor(
-    rawStrings: ReadonlyArray<string>,
-    rawValues: ReadonlyArray<RawValue>
-  ) {
+  constructor(rawStrings: ReadonlyArray<string>,
+              rawValues: ReadonlyArray<RawValue>) {
     if (rawStrings.length === 0) {
       throw new TypeError("Expected at least 1 string");
     }
 
     if (rawStrings.length - 1 !== rawValues.length) {
-      throw new TypeError(
-        `Expected ${rawStrings.length} strings to have ${
-          rawStrings.length - 1
-        } values`
-      );
+      throw new TypeError(`Expected ${rawStrings.length} strings to have ${
+          rawStrings.length - 1} values`);
     }
 
     let valuesLength = rawValues.length;
@@ -72,27 +67,24 @@ export class Sql {
   }
 
   get text() {
-    return this.strings.reduce(
-      (text, part, index) => `${text}$${index}${part}`
-    );
+    return this.strings.reduce((text, part, index) =>
+                                   `${text}$${index}${part}`);
   }
 
-  get sql() {
-    return this.strings.join("?");
-  }
+  get sql() { return this.strings.join("?"); }
 
   [inspect.custom]() {
     return {
-      text: this.text,
-      sql: this.sql,
-      values: this.values,
+      text : this.text,
+      sql : this.sql,
+      values : this.values,
     };
   }
 }
 
 // Work around MySQL enumerable keys in issue #2.
-Object.defineProperty(Sql.prototype, "sql", { enumerable: true });
-Object.defineProperty(Sql.prototype, "text", { enumerable: true });
+Object.defineProperty(Sql.prototype, "sql", {enumerable : true});
+Object.defineProperty(Sql.prototype, "text", {enumerable : true});
 
 /**
  * Create a SQL query for a list of values.
@@ -100,25 +92,51 @@ Object.defineProperty(Sql.prototype, "text", { enumerable: true });
 export function join(values: RawValue[], separator = ",") {
   if (values.length === 0) {
     throw new TypeError(
-      "Expected `join([])` to be called with an array of multiple elements, but got an empty array"
-    );
+        "Expected `join([])` to be called with an array of multiple elements, but got an empty array");
   }
 
-  return new Sql(["", ...Array(values.length - 1).fill(separator), ""], values);
+  return new Sql([ "", ...Array(values.length - 1).fill(separator), "" ],
+                 values);
+}
+
+/**
+ * Create a SQL query for a list of structred values. Very useful for bulk
+ * inserts.
+ */
+export function joinNested(values: Array<RawValue[]>, separator = ",") {
+  if (values.length === 0) {
+    throw new TypeError(
+        "Expected `joinNested([][])` to be called with an array of multiple elements, but got an empty array");
+  }
+
+  const len = values[0].length;
+
+  if (len === 0) {
+    throw new TypeError(
+        "Expected `joinNested([][])` to be called with an nested array of multiple elements, but got an empty array");
+  }
+
+  const v = values.map((x, index) => {
+    if (x.length !== len) {
+      throw new TypeError(`Expected joinNested([][${
+          len}]) instead param at index ${index} had a length of ${x.length}`);
+    }
+
+    return new Sql([ "(", ...Array(x.length - 1).fill(separator), ")" ], x);
+  });
+
+  return new Sql([ "", ...Array(v.length - 1).fill(separator), "" ], v);
 }
 
 /**
  * Create raw SQL statement.
  */
-export function raw(value: string) {
-  return new Sql([value], []);
-}
+export function raw(value: string) { return new Sql([ value ], []); }
 
 /**
  * Placeholder value for "no text".
  */
 export const empty = raw("");
-
 /**
  * Create a SQL object from a template string.
  */

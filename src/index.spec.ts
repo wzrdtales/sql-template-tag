@@ -1,6 +1,6 @@
 import {inspect} from "util";
 
-import sql, {empty, join, Sql} from "./index";
+import sql, {empty, join, joinNested, Sql} from "./index";
 
 describe("sql template tag", () => {
   it("should generate sql", () => {
@@ -68,8 +68,9 @@ describe("sql template tag", () => {
     const query = sql`SELECT COUNT(1)`;
     const keys = [];
 
-    for (const key in query)
+    for (const key in query) {
       keys.push(key);
+    }
 
     expect(keys).toEqual([ "values", "strings", "text", "sql" ]);
   });
@@ -82,8 +83,28 @@ describe("sql template tag", () => {
       expect(query.values).toEqual([ 1, 2, 3 ]);
     });
 
-    it("should error joining an empty list", () => {
-      expect(() => join([])).toThrowError(TypeError);
+    it("should error joining an empty list",
+       () => { expect(() => join([])).toThrowError(TypeError); });
+  });
+
+  describe("joinNested", () => {
+    it("should join nested list", () => {
+      const query = joinNested([
+        [ 1, 2, 3 ],
+        [ 5, 2, 3 ],
+      ]);
+
+      expect(query.text).toEqual("($1,$2,$3),($4,$5,$6)");
+      expect(query.values).toEqual([ 1, 2, 3, 5, 2, 3 ]);
+    });
+
+    it("should error joining an empty list",
+       () => { expect(() => joinNested([])).toThrowError(TypeError); });
+
+    it("should error joining an nested empty list",
+       () => { expect(() => joinNested([ [] ])).toThrowError(TypeError); });
+    it("should error joining an nested non uniform list", () => {
+      expect(() => joinNested([[1, 2], [1, 3], [1]])).toThrowError(TypeError);
     });
   });
 });
