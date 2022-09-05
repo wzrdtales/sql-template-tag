@@ -1,5 +1,5 @@
 {
-  "name": "sql-template-tag",
+  "name": "@wzrdtales/sql-template-tag",
   "version": "5.0.3",
   "publishConfig": {
     "access": "public"
