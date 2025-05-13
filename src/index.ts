@@ -169,6 +169,8 @@ export function logSQL(query: Sql) {
         m = `{${x}}`;
       } else if (isNaN(x)) {
         m = `'${x}'`;
+      } else {
+        m = `${x}`;
       }
 
       return o.replace(`$${++n}`, m);
