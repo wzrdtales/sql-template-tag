@@ -158,6 +158,27 @@ export function raw(value: string) {
 export const empty = raw("");
 
 /**
+ * Log the query for debugging.
+ */
+export function logSQL(query: Sql) {
+  let n = 0;
+  console.log(
+    query.values.reduce((o: string, x: any) => {
+      let m = "";
+      if (Array.isArray(x)) {
+        m = `{${x}}`;
+      } else if (isNaN(x)) {
+        m = `'${x}'`;
+      }
+
+      return o.replace(`$${++n}`, m);
+    }, query.text)
+  );
+
+  return query;
+}
+
+/**
  * Create a SQL object from a template string.
  */
 export default function sql(
